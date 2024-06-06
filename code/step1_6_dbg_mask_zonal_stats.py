@@ -222,10 +222,11 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
 
     # strip Landsat tile label from csv file name.
     print("tile: ", tile)
-    tile_begin = tile[-33:-30]
-    print("begin_tile: ", tile_begin)
-    tile_end = tile[-29:-26]
-    print("end_tile: ", tile_end)
+    _, f = os.path.split(tile)
+    print("f: ", f)
+    tile_begin = f[:3]
+    print("tile_begin: ", tile_begin)
+    tile_end = f[4:7]
     complete_tile = tile_begin + tile_end
     print('=' * 50)
     print('Working on tile: ', complete_tile)
@@ -240,16 +241,14 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
     uid = 'uid'
     im_list = tile
 
-    # todo up to here
-
     # specify the number of bands that zonal stats will be derived from (default is three -GDAL numbering)
-    num_bands = [1, 2, 3, 4, 5, 6]  # , 7, 8, 9]
+    num_bands = [1, 2, 3, 4, 5, 6]
     # create temporary folders
-    dbg_temp_dir_bands = os.path.join(temp_dir_path, 'dbg_temp_individual_bands')
-    os.makedirs(dbg_temp_dir_bands)
+    dbg_mask_temp_dir_bands = os.path.join(temp_dir_path, 'dbg_mask_temp_individual_bands')
+    os.makedirs(dbg_mask_temp_dir_bands)
 
     for i in num_bands:
-        band_dir = os.path.join(dbg_temp_dir_bands, 'band{0}'.format(str(i)))
+        band_dir = os.path.join(dbg_mask_temp_dir_bands, 'band{0}'.format(str(i)))
         os.makedirs(band_dir)
 
     for band_ in num_bands:
@@ -262,6 +261,8 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
                 # cleans the file pathway (Windows)
                 image_s = image.rstrip()
                 path_, im_name = os.path.split(image_s)
+
+                print("im_name: ", im_name)
 
                 # Remove band 1 for L8 and L9
                 if im_name[:1] == "l9olre" or im_name[:1] == "l8olre":
@@ -279,12 +280,12 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
                 if str(image_name_split[-3]).startswith("m"):
                     print("seasonal")
                     im_date = image_name_split[-3][1:]
+                    print("seasonal im date: ", im_date)
                 else:
                     print("single date")
                     im_date = image_name_split[-3]
+                    print("single: ", im_date)
 
-                # im_date = image_name_split[-2][1:]
-                # print("im_date: ", im_date)
 
                 # loops through each image
                 with rasterio.open(image_s, nodata=no_data) as srci:
@@ -294,15 +295,6 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
                     final_results, site_name = apply_zonal_stats_fn(image_s, no_data, band, shape, uid)
                     print("final_results: ", final_results)
                     #
-                    # ['count', 'min', 'max', 'mean', 'median', 'std', 'percentile_25', 'percentile_50',
-                    #  'percentile_75', 'percentile_95', 'percentile_99', 'range']
-
-                    # header = ["b" + str(band) + '_dbg_uid', "b" + str(band) + '_dbg_site', "b" + str(band) + '_dbg_count',
-                    #           "b" + str(band) + '_dbg_min', "b" + str(band) + '_dbg_max',
-                    #           "b" + str(band) + '_dbg_mean',  "b" + str(band) + '_dbg_med', "b" + str(band) + '_dbg_std',
-                    #           "b" + str(band) + '_dbg_p25', "b" + str(band) + '_dbg_p50', "b" + str(band) + '_dbg_p75',
-                    #           "b" + str(band) + '_dbg_p95', "b" + str(band) + '_dbg_p99', "b" + str(band) + '_dbg_range']
-
                     header = ["b" + str(band) + '_uid', "b" + str(band) + '_site', "b" + str(band) + '_min',
                               "b" + str(band) + '_max', "b" + str(band) + '_mean', "b" + str(band) + '_count',
                               "b" + str(band) + '_std', "b" + str(band) + '_median', "b" + str(band) + '_range',
@@ -313,13 +305,13 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
                     df['band'] = band
                     df['image'] = im_name
                     df['date'] = im_date
-                    df.to_csv(dbg_temp_dir_bands + '//band' + str(band) + '//' + image_results, index=False)
+                    df.to_csv(dbg_mask_temp_dir_bands + '//band' + str(band) + '//' + image_results, index=False)
 
     # -------------------------------------------------- Concatenate csv -----------------------------------------------
 
     # for loops through the band folders and concatenates zonal stat outputs into a complete band specific csv
     for x in num_bands:
-        location_output = dbg_temp_dir_bands + '//band' + str(x)
+        location_output = dbg_mask_temp_dir_bands + '//band' + str(x)
         band_files = glob.glob(os.path.join(location_output,
                                             '*.csv'))
 
@@ -327,39 +319,39 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
         df_from_each_band_file = (pd.read_csv(f) for f in band_files)
         concat_band_df = pd.concat(df_from_each_band_file, ignore_index=False, axis=0, sort=False)
         # export the band specific results to a csv file (i.e. three outputs)
-        print("output csv to: ", dbg_temp_dir_bands + '//' + 'Band' + str(x) + '.csv')
-        concat_band_df.to_csv(dbg_temp_dir_bands + '//' + 'Band' + str(x) + '.csv', index=False)
+        print("output csv to: ", dbg_mask_temp_dir_bands + '//' + 'Band' + str(x) + '.csv')
+        concat_band_df.to_csv(dbg_mask_temp_dir_bands + '//' + 'Band' + str(x) + '.csv', index=False)
 
     # ----------------------------------------- Concatenate three bands together ---------------------------------------
 
 
-    header_all = ['uid', 'site', 'b1_dbg_min', 'b1_dbg_max', 'b1_dbg_mean', 'b1_dbg_count',
-                  'b1_dbg_std', 'b1_dbg_med', 'b1_dbg_range', 'b1_dbg_p25', 'b1_dbg_p50', 'b1_dbg_p75',
-                  'b1_dbg_p95', 'b1_dbg_p99', 'band', 'image', 'date',
+    header_all = ['uid', 'site', 'b1_dbgfm_min', 'b1_dbgfm_max', 'b1_dbgfm_mean', 'b1_dbgfm_count',
+                  'b1_dbgfm_std', 'b1_dbgfm_med', 'b1_dbgfm_range', 'b1_dbgfm_p25', 'b1_dbgfm_p50', 'b1_dbgfm_p75',
+                  'b1_dbgfm_p95', 'b1_dbgfm_p99', 'band', 'image', 'date',
 
-                  'b2_dbg_uid', 'b2_dbg_site', 'b2_dbg_min', 'b2_dbg_max', 'b2_dbg_mean', 'b2_dbg_count', 'b2_dbg_std',
-                  'b2_dbg_med', 'b2_dbg_range', 'b2_dbg_p25', 'b2_dbg_p50', 'b2_dbg_p75',
-                  'b2_dbg_p95', 'b2_dbg_p99', 'band2', 'image2', 'date2',
+                  'b2_dbgfm_uid', 'b2_dbgfm_site', 'b2_dbgfm_min', 'b2_dbgfm_max', 'b2_dbgfm_mean', 'b2_dbgfm_count', 'b2_dbgfm_std',
+                  'b2_dbgfm_med', 'b2_dbgfm_range', 'b2_dbgfm_p25', 'b2_dbgfm_p50', 'b2_dbgfm_p75',
+                  'b2_dbgfm_p95', 'b2_dbgfm_p99', 'band2', 'image2', 'date2',
 
-                  'b3_uid', 'b3_site', 'b3_dbg_min', 'b3_dbg_max', 'b3_dbg_mean',
-                  'b3_dbg_count', 'b3_dbg_std', 'b3_dbg_med', 'b3_dbg_range', 'b3_dbg_p25', 'b3_dbg_p50', 'b3_dbg_p75',
-                  'b3_dbg_p95', 'b3_dbg_p99', 'band3', 'image3', 'date3',
+                  'b3_uid', 'b3_site', 'b3_dbgfm_min', 'b3_dbgfm_max', 'b3_dbgfm_mean',
+                  'b3_dbgfm_count', 'b3_dbgfm_std', 'b3_dbgfm_med', 'b3_dbgfm_range', 'b3_dbgfm_p25', 'b3_dbgfm_p50', 'b3_dbgfm_p75',
+                  'b3_dbgfm_p95', 'b3_dbgfm_p99', 'band3', 'image3', 'date3',
 
-                  'b4_uid', 'b4_site', 'b4_dbg_min', 'b4_dbg_max', 'b4_dbg_mean',
-                  'b4_dbg_count', 'b4_dbg_std', 'b4_dbg_med', 'b4_dbg_range', 'b4_dbg_p25', 'b4_dbg_p50', 'b4_dbg_p75',
-                  'b4_dbg_p95', 'b4_dbg_p99', 'band3', 'image3', 'date3',
+                  'b4_uid', 'b4_site', 'b4_dbgfm_min', 'b4_dbgfm_max', 'b4_dbgfm_mean',
+                  'b4_dbgfm_count', 'b4_dbgfm_std', 'b4_dbgfm_med', 'b4_dbgfm_range', 'b4_dbgfm_p25', 'b4_dbgfm_p50', 'b4_dbgfm_p75',
+                  'b4_dbgfm_p95', 'b4_dbgfm_p99', 'band3', 'image3', 'date3',
 
-                  'b5_uid', 'b5_site', 'b5_dbg_min', 'b5_dbg_max', 'b5_dbg_mean',
-                  'b5_dbg_count', 'b5_dbg_std', 'b5_dbg_med', 'b5_dbg_range', 'b5_dbg_p25', 'b5_dbg_p50', 'b5_dbg_p75',
-                  'b5_dbg_p95', 'b5_dbg_p99', 'band3', 'image3', 'date3',
+                  'b5_uid', 'b5_site', 'b5_dbgfm_min', 'b5_dbgfm_max', 'b5_dbgfm_mean',
+                  'b5_dbgfm_count', 'b5_dbgfm_std', 'b5_dbgfm_med', 'b5_dbgfm_range', 'b5_dbgfm_p25', 'b5_dbgfm_p50', 'b5_dbgfm_p75',
+                  'b5_dbgfm_p95', 'b5_dbgfm_p99', 'band3', 'image3', 'date3',
 
-                  'b6_uid', 'b6_site', 'b6_dbg_min', 'b6_dbg_max', 'b6_dbg_mean',
-                  'b6_dbg_count', 'b6_dbg_std', 'b6_dbg_med', 'b6_dbg_range', 'b6_dbg_p25', 'b6_dbg_p50', 'b6_dbg_p75',
-                  'b6_dbg_p95', 'b6_dbg_p99', 'band3', 'image3', 'date3']
+                  'b6_uid', 'b6_site', 'b6_dbgfm_min', 'b6_dbgfm_max', 'b6_dbgfm_mean',
+                  'b6_dbgfm_count', 'b6_dbgfm_std', 'b6_dbgfm_med', 'b6_dbgfm_range', 'b6_dbgfm_p25', 'b6_dbgfm_p50', 'b6_dbgfm_p75',
+                  'b6_dbgfm_p95', 'b6_dbgfm_p99', 'band3', 'image3', 'date3']
 
     # print("header length: ", len(header_all))
 
-    all_files = glob.glob(os.path.join(dbg_temp_dir_bands,
+    all_files = glob.glob(os.path.join(dbg_mask_temp_dir_bands,
                                        '*.csv'))
     # advisable to use os.path.join as this makes concatenation OS independent
     df_from_each_file = (pd.read_csv(f) for f in all_files)
@@ -377,26 +369,26 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
     output_zonal_stats = time_stamp_fn(output_zonal_stats)
 
     # remove 100 from zone_stats
-    output_zonal_stats = landsat_correction_fn(output_zonal_stats, num_bands, var_)
+    output_zonal_stats = landsat_correction_fn(output_zonal_stats, num_bands, "dbgfm")
 
     # reshape the final dataframe
     output_zonal_stats = output_zonal_stats[
-        ['uid', 'site', 'image', 'year', 'month', 'day', 'b1_dbg_count', 'b1_dbg_min',
-         'b1_dbg_max', 'b1_dbg_mean', 'b1_dbg_med', 'b1_dbg_std',
-         'b1_dbg_p25', 'b1_dbg_p50', 'b1_dbg_p75', 'b1_dbg_p95', 'b1_dbg_p99', 'b1_dbg_range',
-         'b2_dbg_count', 'b2_dbg_min', 'b2_dbg_max', 'b2_dbg_mean', 'b2_dbg_med', 'b2_dbg_std',
-         'b2_dbg_p25', 'b2_dbg_p50', 'b2_dbg_p75', 'b2_dbg_p95', 'b2_dbg_p99',
-         'b2_dbg_range', 'b3_dbg_count', 'b3_dbg_min', 'b3_dbg_max', 'b3_dbg_mean', 'b3_dbg_med',
-         'b3_dbg_std', 'b3_dbg_p25', 'b3_dbg_p50', 'b3_dbg_p75', 'b3_dbg_p95', 'b3_dbg_p99', 'b3_dbg_range',
+        ['uid', 'site', 'image', 'year', 'month', 'day', 'b1_dbgfm_count', 'b1_dbgfm_min',
+         'b1_dbgfm_max', 'b1_dbgfm_mean', 'b1_dbgfm_med', 'b1_dbgfm_std',
+         'b1_dbgfm_p25', 'b1_dbgfm_p50', 'b1_dbgfm_p75', 'b1_dbgfm_p95', 'b1_dbgfm_p99', 'b1_dbgfm_range',
+         'b2_dbgfm_count', 'b2_dbgfm_min', 'b2_dbgfm_max', 'b2_dbgfm_mean', 'b2_dbgfm_med', 'b2_dbgfm_std',
+         'b2_dbgfm_p25', 'b2_dbgfm_p50', 'b2_dbgfm_p75', 'b2_dbgfm_p95', 'b2_dbgfm_p99',
+         'b2_dbgfm_range', 'b3_dbgfm_count', 'b3_dbgfm_min', 'b3_dbgfm_max', 'b3_dbgfm_mean', 'b3_dbgfm_med',
+         'b3_dbgfm_std', 'b3_dbgfm_p25', 'b3_dbgfm_p50', 'b3_dbgfm_p75', 'b3_dbgfm_p95', 'b3_dbgfm_p99', 'b3_dbgfm_range',
 
-         'b4_dbg_count', 'b4_dbg_min', 'b4_dbg_max', 'b4_dbg_mean', 'b4_dbg_med',
-         'b4_dbg_std', 'b4_dbg_p25', 'b4_dbg_p50', 'b4_dbg_p75', 'b4_dbg_p95', 'b4_dbg_p99', 'b4_dbg_range',
+         'b4_dbgfm_count', 'b4_dbgfm_min', 'b4_dbgfm_max', 'b4_dbgfm_mean', 'b4_dbgfm_med',
+         'b4_dbgfm_std', 'b4_dbgfm_p25', 'b4_dbgfm_p50', 'b4_dbgfm_p75', 'b4_dbgfm_p95', 'b4_dbgfm_p99', 'b4_dbgfm_range',
 
-         'b5_dbg_count', 'b5_dbg_min', 'b5_dbg_max', 'b5_dbg_mean', 'b5_dbg_med',
-         'b5_dbg_std', 'b5_dbg_p25', 'b5_dbg_p50', 'b5_dbg_p75', 'b5_dbg_p95', 'b5_dbg_p99', 'b5_dbg_range',
+         'b5_dbgfm_count', 'b5_dbgfm_min', 'b5_dbgfm_max', 'b5_dbgfm_mean', 'b5_dbgfm_med',
+         'b5_dbgfm_std', 'b5_dbgfm_p25', 'b5_dbgfm_p50', 'b5_dbgfm_p75', 'b5_dbgfm_p95', 'b5_dbgfm_p99', 'b5_dbgfm_range',
 
-         'b6_dbg_count', 'b6_dbg_min', 'b6_dbg_max', 'b6_dbg_mean', 'b6_dbg_med',
-         'b6_dbg_std', 'b6_dbg_p25', 'b6_dbg_p50', 'b6_dbg_p75', 'b6_dbg_p95', 'b6_dbg_p99', 'b6_dbg_range',
+         'b6_dbgfm_count', 'b6_dbgfm_min', 'b6_dbgfm_max', 'b6_dbgfm_mean', 'b6_dbgfm_med',
+         'b6_dbgfm_std', 'b6_dbgfm_p25', 'b6_dbgfm_p50', 'b6_dbgfm_p75', 'b6_dbgfm_p95', 'b6_dbgfm_p99', 'b6_dbgfm_range',
          ]]
 
     site_list = output_zonal_stats.site.unique().tolist()
@@ -405,24 +397,24 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
         for i in site_list:
             out_df = output_zonal_stats[output_zonal_stats['site'] == i]
 
-            out_path = os.path.join(zonal_stats_output, "{0}_{1}_dbg_zonal_stats.csv".format(str(i), complete_tile))
+            out_path = os.path.join(zonal_stats_output, "{0}_{1}_dbg_mask_zonal_stats.csv".format(str(i), complete_tile))
             # export the pandas df to a csv file
             out_df.to_csv(out_path, index=False)
 
 
     else:
         out_path = os.path.join(zonal_stats_output,
-                                "{0}_{1}_dbg_zonal_stats.csv".format(str(site_list[0]), complete_tile))
+                                "{0}_{1}_dbg_mask_zonal_stats.csv".format(str(site_list[0]), complete_tile))
         # export the pandas df to a csv file
         output_zonal_stats.to_csv(out_path, index=False)
 
     # ----------------------------------------------- Delete temporary files -------------------------------------------
     # remove the temp dir and single band csv files
-    shutil.rmtree(dbg_temp_dir_bands)
+    shutil.rmtree(dbg_mask_temp_dir_bands)
 
     print('=' * 50)
 
-    return output_zonal_stats, complete_tile, tile, dbg_temp_dir_bands
+    return output_zonal_stats, complete_tile, tile, dbg_mask_temp_dir_bands
 
 
 if __name__ == '__main__':

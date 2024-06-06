@@ -78,14 +78,18 @@ def project_tile_grid_fn(tile_grid, prime_temp_grid_dir):
     # read in Landsat tile grid vector dataset
     tile_grid = gpd.read_file(tile_grid)
     # subset dataset into WGSz52 and WGSz53
-    tile_grid_54_selection = tile_grid.loc[tile_grid['WRSPR'] == 100_074]
-    tile_grid_53_selection = tile_grid.loc[(tile_grid['WRSPR'] <= 104_073) & ((tile_grid['WRSPR'] != 103_078) |(tile_grid['WRSPR'] != 100_074))]
+    # tile_grid_54_selection = tile_grid.loc[tile_grid['WRSPR'] == 100_074]
+    # tile_grid_53_selection = tile_grid.loc[(tile_grid['WRSPR'] <= 104_073) & ((tile_grid['WRSPR'] != 103_078) |(tile_grid['WRSPR'] != 100_074))]
+    # tile_grid_52_selection = tile_grid.loc[(tile_grid['WRSPR'] >= 104_072) | (tile_grid['WRSPR'] == 103_078)]
+
+    tile_grid_54_selection = tile_grid.loc[(tile_grid['WRSPR'] <= 100_074) & (tile_grid["WRSPR"]>=100_072)]
+    tile_grid_53_selection = tile_grid.loc[(tile_grid['WRSPR'] <= 104_073) & ((tile_grid['WRSPR'] != 103_078) |(tile_grid['WRSPR'] != 100_074) |(tile_grid['WRSPR'] != 100_073) |(tile_grid['WRSPR'] != 100_072))]
     tile_grid_52_selection = tile_grid.loc[(tile_grid['WRSPR'] >= 104_072) | (tile_grid['WRSPR'] == 103_078)]
 
     # project subsets into crs
     tile_grid_wgs52 = tile_grid_52_selection.to_crs(epsg=32752)
     tile_grid_wgs53 = tile_grid_53_selection.to_crs(epsg=32753)
-    tile_grid_wgs54 = tile_grid_53_selection.to_crs(epsg=32754)
+    tile_grid_wgs54 = tile_grid_54_selection.to_crs(epsg=32754)
 
     # export shapefiles  
     tile_grid_wgs52.to_file(driver='ESRI Shapefile', filename=proj_tile_grid_sep_dir + '\\tile_grid_wgs52.shp')
@@ -113,7 +117,8 @@ def negative_buffer_fn(projected_df, prime_temp_grid_dir, crs_name):
         projected_df2 = projected_df.loc[projected_df.WRSPR == landsatTile]
 
         # apply a negative 4000m buffer from each Landsat tile to mask the tile images at a later point.
-        projected_df3 = projected_df2.buffer(-4000)
+        #todo change back to -4000 buff01 misssing in 106_09
+        projected_df3 = projected_df2.buffer(-3000)
 
         # export shapefile.
         projected_df3.to_file(driver='ESRI Shapefile',
@@ -209,7 +214,7 @@ def concatenate_tile_df_fn(zonal_stats_ready_dir, identify_tile_grid_temp_dir, p
 
     for file in glob.glob(identify_tile_grid_temp_dir + "\\*" + crs_name + ".shp"):
         # append the open geo_df to a list.
-        print("file: ", file)
+        #print("file: ", file)
         geo_df = gpd.read_file(file)
         clean_tile = file[-28:-22]
         geo_df['TILE'] = clean_tile
@@ -219,11 +224,11 @@ def concatenate_tile_df_fn(zonal_stats_ready_dir, identify_tile_grid_temp_dir, p
         geo_df1 = gpd.GeoDataFrame(pd.concat(list_identify_zone, ignore_index=True), crs=list_identify_zone[0].crs)
         comp_geo_df = geo_df1.dropna(axis=0, subset=['FID_2'])
         comp_geo_df.rename(columns={"TILE": "tile"}, errors="raise", inplace=True)
-        print('comp_geo_df: ', comp_geo_df)
-        comp_geo_df.to_file(r"Z:\Scratch\Rob\tern\tree_biomass_field_data\test.shp", driver="ESRI Shapefile")
+        #print('comp_geo_df: ', comp_geo_df)
+        #comp_geo_df.to_file(r"Z:\Scratch\Rob\tern\tree_biomass_field_data\test.shp", driver="ESRI Shapefile")
 
         for i in comp_geo_df.tile.unique():
-            print("i: ", i)
+            #print("i: ", i)
             site_tile_df = comp_geo_df.loc[comp_geo_df.tile == i]
             site_tile_df2 = site_tile_df[['site_name', 'tile', 'geometry']]
             site_tile_df2.reset_index(drop=True, inplace=True)
@@ -263,7 +268,7 @@ def main_routine(tile_grid, geo_df2, data, zone, export_dir_path, prime_temp_gri
         # set the odk_geo1ha_df variable to geo_df52
         odk_geo1ha_df = geo_df2
 
-        print("odk_geo1ha_df: ", odk_geo1ha_df)
+        #("odk_geo1ha_df: ", odk_geo1ha_df)
         # call the concatenate_df_fn function.
         comp_tile_geo_df, concat_tile_grid_temp_dir, crs_name = concatenate_df_fn(prime_temp_grid_dir, tile_grid_temp_dir,
                                                                                   crs_name)

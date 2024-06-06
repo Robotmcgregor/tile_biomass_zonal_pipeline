@@ -76,6 +76,11 @@ def append_geo_df_fn(geo_df2, zone, export_dir_path):
     elif str(zone) == "3":
         geo_df2['crs'] = 'WGSz53'
         print("comp_geo_df_53: ", geo_df2)
+
+    elif str(zone) == "4":
+        geo_df2['crs'] = 'WGSz54'
+        print("comp_geo_df_54: ", geo_df2)
+
     else:
         import sys
         sys.exit()

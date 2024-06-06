@@ -518,9 +518,9 @@ def main_routine():
             print("csv_file: ", csv_file)
 
             # call the step1_6_dp1_zonal_stats.py script.
-            import step1_6_dp1_zonal_stats
-            dp1_output_zonal_stats, dp1_complete_tile, dp1_tile, dp1_temp_dir_bands = step1_6_dp1_zonal_stats.main_routine(
-                temp_dir_path, zonal_stats_ready_dir, no_data, csv_file, dp1_zonal_stats_output, shapefile_path, "dp1")
+            # import step1_6_dp1_zonal_stats
+            # dp1_output_zonal_stats, dp1_complete_tile, dp1_tile, dp1_temp_dir_bands = step1_6_dp1_zonal_stats.main_routine(
+            #     temp_dir_path, zonal_stats_ready_dir, no_data, csv_file, dp1_zonal_stats_output, shapefile_path, "dp1")
 
 
         # -------------------------------------------------- DP1 fire ----------------------------------------------------
@@ -532,6 +532,8 @@ def main_routine():
             run_fire_scar_mask_lsat_dp1.main_routine(i, zone, temp_dir_path, tile, burn_dir)
 
             # call the step1_5_dp1_landsat_list.py script.
+
+
         import step1_5_dp1_landsat_list_fire_mask
         step1_5_dp1_landsat_list_fire_mask.main_routine(
             export_dir_path, geo_df3, image_count, lsat_dir, path, row, zone, extension)
@@ -543,8 +545,6 @@ def main_routine():
         dp1_mask_zonal_stats_output = (export_dir_path + '\\dp1_mask_zonal_stats')
         dp1_mask_list_zonal_tile = []
 
-        # import sys
-        # sys.exit()
 
         print("looking for dp1 masked data: ", dp1_mask_tile_for_processing_dir)
         for file in glob.glob(dp1_mask_tile_for_processing_dir + '\\*.csv'):
@@ -554,16 +554,17 @@ def main_routine():
 
         print("-" * 50)
         print("dp1 MASK: ", dp1_mask_list_zonal_tile)
+        print("length: ", len(dp1_mask_list_zonal_tile))
 
         if len(dp1_mask_list_zonal_tile) >= 1:
             #
             for csv_file in dp1_mask_list_zonal_tile:
                 print("csv_file: ", csv_file)
                 #call the step1_6_dp1_mask_zonal_stats.py script.
-                import step1_6_dp1_mask_zonal_stats
-                dp1_output_zonal_stats, dp1_complete_tile, dp1_tile, dp1_temp_dir_bands = step1_6_dp1_mask_zonal_stats.main_routine(
-                    temp_dir_path, zonal_stats_ready_dir, no_data, csv_file, dp1_mask_zonal_stats_output,
-                    shapefile_path, "dp1")
+                # import step1_6_dp1_mask_zonal_stats
+                # dp1_output_zonal_stats, dp1_complete_tile, dp1_tile, dp1_temp_dir_bands = step1_6_dp1_mask_zonal_stats.main_routine(
+                #     temp_dir_path, zonal_stats_ready_dir, no_data, csv_file, dp1_mask_zonal_stats_output,
+                #     shapefile_path, "dp1")
 
         else:
             print("No dp1 mask images were located")
@@ -577,12 +578,19 @@ def main_routine():
     extension = "dp0"
     no_data = 255.0
 
+    print('-' * 50)
+    print('DP0-' * 50)
+    print('-' * 50)
+
     import step1_5_dp0_landsat_list3
     step1_5_dp0_landsat_list3.main_routine(
         export_dir_path, geo_df3, image_count, lsat_dir, path, row, zone, extension)
 
     # define the tile for processing directory.
     dp0_tile_for_processing_dir = (dp0_tile_status_dir + '\\dp0_for_processing')
+
+    print('-' * 50)
+    print('DP0-' * 50)
     print('-' * 50)
 
     dp0_zonal_stats_output = (export_dir_path + '\\dp0_zonal_stats')
@@ -604,9 +612,9 @@ def main_routine():
             # call the step1_6_dp0_zonal_stats.py script.
 
             print("dp0_zonal_stats_output: ", dp0_zonal_stats_output)
-            import step1_6_dp0_zonal_stats3
-            dp0_output_zonal_stats, dp0_complete_tile, dp0_tile, dp0_temp_dir_bands = step1_6_dp0_zonal_stats3.main_routine(
-                temp_dir_path, zonal_stats_ready_dir, no_data, csv_file, dp0_zonal_stats_output, shapefile_path, "dp0")
+            # import step1_6_dp0_zonal_stats3
+            # dp0_output_zonal_stats, dp0_complete_tile, dp0_tile, dp0_temp_dir_bands = step1_6_dp0_zonal_stats3.main_routine(
+            #     temp_dir_path, zonal_stats_ready_dir, no_data, csv_file, dp0_zonal_stats_output, shapefile_path, "dp0")
 
             # ------------------------------------------- DP0 fire -----------------------------------------------------
 
@@ -662,6 +670,10 @@ def main_routine():
     extension = "dbg"
     no_data = 32767.0
 
+    print('-' * 50)
+    print('DBG-' * 50)
+    print('-' * 50)
+
     import step1_5_dbg_landsat_list3
     step1_5_dbg_landsat_list3.main_routine(
         export_dir_path, geo_df3, image_count, lsat_dir, path, row, zone, extension)
@@ -688,16 +700,14 @@ def main_routine():
 
             # call the step1_6_dbg_zonal_stats.py script.
             print("csv_file: ", csv_file)
-            import step1_6_dbg_zonal_stats3
-            dbg_output_zonal_stats, dbg_complete_tile, dbg_tile, dbg_temp_dir_bands = step1_6_dbg_zonal_stats3.main_routine(
-                temp_dir_path, zonal_stats_ready_dir, no_data, csv_file, dbg_zonal_stats_output, shapefile_path, "dbg")
+            # import step1_6_dbg_zonal_stats3
+            # dbg_output_zonal_stats, dbg_complete_tile, dbg_tile, dbg_temp_dir_bands = step1_6_dbg_zonal_stats3.main_routine(
+            #     temp_dir_path, zonal_stats_ready_dir, no_data, csv_file, dbg_zonal_stats_output, shapefile_path, "dbg")
 
         #  --------------------------------------------- dbg fire  -----------------------------------------------------
 
         for i in dbg_list_zonal_tile:
             print("Creating fire mask for dbg: ", i)
-
-            print(i, zone, temp_dir_path, tile, burn_dir)
 
             import run_fire_scar_mask_lsat_dbg_zstdmask
             run_fire_scar_mask_lsat_dbg_zstdmask.main_routine(i, zone, temp_dir_path, tile, burn_dir)
@@ -746,6 +756,10 @@ def main_routine():
     extension = "dbi"
     no_data = 32767.0
 
+    print('-' * 50)
+    print('DBI-' * 50)
+    print('-' * 50)
+
     import step1_5_dbi_landsat_list
     step1_5_dbi_landsat_list.main_routine(
         export_dir_path, geo_df3, image_count, lsat_dir, path, row, zone, extension)
@@ -776,9 +790,9 @@ def main_routine():
         for csv_file in dbi_list_zonal_tile:
             # call the step1_6_dbi_zonal_stats.py script.
             print("csv_file: ", csv_file)
-            import step1_6_dbi_zonal_stats
-            dbi_output_zonal_stats, dbi_complete_tile, dbi_tile, dbi_temp_dir_bands = step1_6_dbi_zonal_stats.main_routine(
-                temp_dir_path, zonal_stats_ready_dir, no_data, csv_file, dbi_zonal_stats_output, shapefile_path, "dbi")
+            # import step1_6_dbi_zonal_stats
+            # dbi_output_zonal_stats, dbi_complete_tile, dbi_tile, dbi_temp_dir_bands = step1_6_dbi_zonal_stats.main_routine(
+            #     temp_dir_path, zonal_stats_ready_dir, no_data, csv_file, dbi_zonal_stats_output, shapefile_path, "dbi")
 
         #  ---------------------------------------------------- dbi fire  -------------------------------------------
 
@@ -822,9 +836,6 @@ def main_routine():
 
     else:
         print("No dbi images were located")
-
-
-
 
     # ---------------------------------------------------- Clean up ----------------------------------------------------
 

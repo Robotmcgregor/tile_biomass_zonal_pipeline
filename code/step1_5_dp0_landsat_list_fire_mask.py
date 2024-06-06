@@ -80,6 +80,7 @@ def append_geo_df_fn(geo_df2, zone, export_dir_path):
     elif str(zone) == "4":
         geo_df2['crs'] = 'WGSz54'
         print("comp_geo_df_54: ", geo_df2)
+
     else:
         import sys
         sys.exit()
@@ -137,10 +138,10 @@ def list_file_directory_fn(landsat_tile_dir, extension, zone):
     # object variable.
     for root, dirs, files in os.walk(landsat_tile_dir):
         for file in files:
-            #print('file: ', file)
+            print('file: ', file)
             # Search for files ending with the string value stored in the object variable: imageSearchCriteria.
-            if file.endswith("{0}m{1}_zstdmask.img".format(extension, str(zone))):
-                #print("located: ", file)
+            if file.endswith("{0}m{1}_dksdmask.img".format(extension, str(zone))) or file.endswith("{0}m{1}_dkndmask.img".format(extension, str(zone))):
+                print("located: ", file)
                 # Concatenate the root and file names to create a file path.
                 image_path = (os.path.join(root, file))
                 #print('image_path: ', image_path)
@@ -171,9 +172,6 @@ def create_csv_list_of_paths_fn(lsat_tile, lsat_dir, extension, image_count, til
     list_insufficient = []
     list_sufficient = []
 
-    # landsat_tile = str(path) + '_' + str(row)
-
-
     # Loop through the unique Landsat Tile list ' listTile Unique'.
     landsat_tile_dir = lsat_dir + '\\' + lsat_tile
     print('=' * 50)
@@ -197,7 +195,7 @@ def create_csv_list_of_paths_fn(lsat_tile, lsat_dir, extension, image_count, til
         list_sufficient.append(lsat_tile)
 
         # Assumes that file_list is 1D, it writes each path to a new line in the first 'column' of a .csv
-        csv_output = tile_status_dir + '\\dp0_for_processing\\' + str(lsat_tile) + '_dp0_landsat_tile_list.csv'
+        csv_output = tile_status_dir + '\\dp0_mask_for_processing\\' + str(lsat_tile) + '_dp0_mask_landsat_tile_list.csv'
 
         # Creates a csv list of the Landsat fractional cover image paths if the minimum fc_count threshold was met.
         with open(csv_output, "w") as output:
@@ -210,16 +208,16 @@ def create_csv_list_of_paths_fn(lsat_tile, lsat_dir, extension, image_count, til
         #sys.exit()
 
     # assumes that file_list is a flat list, it adds a
-    csv_output2 = tile_status_dir + '\\dp0_tile_status_lists\\' + 'Complete_list_of_dp0_tiles_ready_for_zonal_stats.csv'
-    # Creates a csv list of all of the Landsat tile names that contain 1ha sites that have met the minimum
+    csv_output2 = tile_status_dir + '\\dp0_mask_tile_status_lists\\' + 'Complete_list_of_dp0_mask_tiles_ready_for_zonal_stats.csv'
+    # Creates a csv list of all the Landsat tile names that contain 1ha sites that have met the minimum
     # fc_count threshold.
     with open(csv_output2, "w") as output:
         writer = csv.writer(output, lineterminator='\n')
         for file in list_sufficient:
             writer.writerow([file])
 
-    csv_output3 = tile_status_dir + '\\dp0_tile_status_lists\\' + 'Complete_list_of_dp0_tiles_not_processed.csv'
-    # Creates a csv list of all of the Landsat tile names that contain 1ha sites that have NOT met the minimum
+    csv_output3 = tile_status_dir + '\\dp0_mask_tile_status_lists\\' + 'Complete_list_of_dp0_mask_tiles_not_processed.csv'
+    # Creates a csv list of all the Landsat tile names that contain 1ha sites that have NOT met the minimum
     # fc_count threshold.
     with open(csv_output3, "w") as output:
         writer = csv.writer(output, lineterminator='\n')
@@ -235,8 +233,9 @@ def main_routine(export_dir_path, geo_df2, image_count, lsat_dir, path, row, zon
     #export_dir_path, geo_df2, image_count, lsat_dir
 
     # define the tile_status_dir path
-    tile_status_dir = (export_dir_path + '\\dp0_tile_status')
-    #print("tile_status_dir:", tile_status_dir)
+    tile_status_dir = (export_dir_path + '\\dp0_mask_tile_status')
+    print("tile_status_dir:", tile_status_dir)
+
 
     # Call the append_geo_df_fn function to concatenate previously separated projected 1ha sites to a single
     # geo-dataframe and re-project to geographic GDA94.

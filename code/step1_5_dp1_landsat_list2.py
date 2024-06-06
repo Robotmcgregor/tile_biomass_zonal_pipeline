@@ -6,7 +6,7 @@ step1_5_dp1_landsat_list.py
 Description: This script searches through each Landsat tile directory that was identified as overlaying with an odk 1hs
 site and determines if there are sufficient images for zonal stats processing (greater than fc_count).
 If an identified tile contains sufficient  images, each image path will be input into a csv (1 path per line) and the
-csv will be saved in the for processing sub-directory. If there are insufficient images then the tile name will be saved
+csv will be saved in the for processing subdirectory. If there are insufficient images then the tile name will be saved
 in a csv titled insufficient files saved in the tile status directory of the export directory.
 
 
@@ -88,13 +88,14 @@ def append_geo_df_fn(geo_df2, zone, export_dir_path):
 
     # Project both geoDataFrames to geographic GDA94.
     geo_df_gda94 = geo_df2.to_crs(epsg=4283)
-    #geo_df_gda942 = comp_geo_df_53.to_crs(epsg=4283)
+    # geo_df_gda942 = comp_geo_df_53.to_crs(epsg=4283)
 
     # Append/concatenate both geoDataFrames into one.
-    #geo_df = geo_df_gda941.append(geo_df_gda942)
+    # geo_df = geo_df_gda941.append(geo_df_gda942)
 
     # Export geoDataFrame to the export directory (command argument).
-    geo_df_gda94.to_file(driver='ESRI Shapefile', filename=export_dir_path + '\\' + 'landsat_tile_site_identity_gda94.shp')
+    geo_df_gda94.to_file(driver='ESRI Shapefile',
+                         filename=export_dir_path + '\\' + 'landsat_tile_site_identity_gda94.shp')
 
     return geo_df_gda94
 
@@ -143,32 +144,29 @@ def list_file_directory_fn(landsat_tile_dir, extension, zone):
 
     for root, dirs, files in os.walk(landsat_tile_dir):
         for file in files:
-            print('file: ', file)
+            #print('file: ', file)
             # Search for files ending with the string value stored in the object variable: imageSearchCriteria.
             if file.endswith("{0}m{1}.img".format(extension, str(zone))):
                 # Concatenate the root and file names to create a file path.
                 image_path = (os.path.join(root, file))
-                print('LOCATED - image_path: ', image_path)
+                #print('LOCATED - image_path: ', image_path)
                 # Append the image_path variable to the empty list 'list_landsat_tile_path'.
                 list_landsat_tile_path.append(image_path)
-                #print("list_landsat: ", list_landsat_tile_path)
-
-
+                # print("list_landsat: ", list_landsat_tile_path)
 
     return list_landsat_tile_path
 
 
 def create_csv_list_of_paths_fn(lsat_tile, lsat_dir, extension, image_count, tile_status_dir, path, row, zone):
-
     """ Determine which Landsat Tiles have a sufficient amount of images to process.
 
-    @param list_tile_unique: list object containing the path to all landsat images matching either search criteria.
-    @param landsat_dir: string object to the Landsat tile sub-directory of interest.
-    @param image_search_criteria1: string object containing the end part of the required file name (--search_criteria1)
-    @param image_search_criteria2: string object containing the end part of the required file name (--search_criteria2)
-    @param fc_count: integer object containing the command argument --image_count
-    @param tile_status_dir: string object to the sub-directory export_dir\tile_status
-    @return list_sufficient: list object containing the the path to all Landsat images of interest providing that the
+    :param zone:
+    :param image_count:
+    :param extension:
+    :param lsat_dir:
+    :param lsat_tile:
+    @param tile_status_dir: string object to the subdirectory export_dir\tile_status
+    @return list_sufficient: list object containing the path to all Landsat images of interest providing that the
     number was greater than the fc_count value.
     """
     # Crete two empty list to contain Landsat tile names which meet and do not meet the minimum number of images set
@@ -179,11 +177,10 @@ def create_csv_list_of_paths_fn(lsat_tile, lsat_dir, extension, image_count, til
 
     # landsat_tile = str(path) + '_' + str(row)
 
-
     # Loop through the unique Landsat Tile list ' listTile Unique'.
     landsat_tile_dir = lsat_dir + '\\' + lsat_tile
     print('=' * 50)
-    print('Confirm that there are sufficient fractional cover tiles for processing')
+    print('Confirm that there are sufficient seasonal fractional cover tiles dp1 for processing')
     print('landsat_tile_dir: ', landsat_tile_dir)
     # Run the list_file_directory_fn function.
     list_landsat_tile_path = list_file_directory_fn(landsat_tile_dir, extension, zone)
@@ -191,7 +188,7 @@ def create_csv_list_of_paths_fn(lsat_tile, lsat_dir, extension, image_count, til
     print("list_landsat_tile_path: ", list_landsat_tile_path)
     # Calculate the number of image pathways stored in the list_landsat_tile_path variable.
     image_length = (len(list_landsat_tile_path))
-    print(' - Total fractional cover tiles located: ', image_length)
+    print(' - Total seasonal fractional cover dp1 tiles located: ', image_length)
 
     # Rule set to file Landsat tile names based on the amount of images comparatively to the minimum requirement
     # set by the fc_count variable.
@@ -212,12 +209,12 @@ def create_csv_list_of_paths_fn(lsat_tile, lsat_dir, extension, image_count, til
                 writer.writerow([file])
     else:
         list_insufficient.append(lsat_tile)
-        print('There are insufficient Landsat images for: ', str(lsat_tile))
-        #sys.exit()
+        print('There are insufficient seasonal fractional cover dp1 tiles for processing: ', str(lsat_tile))
+        # sys.exit()
 
     # assumes that file_list is a flat list, it adds a
     csv_output2 = tile_status_dir + '\\dp1_tile_status_lists\\' + 'Complete_list_of_dp1_tiles_ready_for_zonal_stats.csv'
-    # Creates a csv list of all of the Landsat tile names that contain 1ha sites that have met the minimum
+    # Creates a csv list of all the Landsat tile names that contain 1ha sites that have met the minimum
     # fc_count threshold.
     with open(csv_output2, "w") as output:
         writer = csv.writer(output, lineterminator='\n')
@@ -225,7 +222,7 @@ def create_csv_list_of_paths_fn(lsat_tile, lsat_dir, extension, image_count, til
             writer.writerow([file])
 
     csv_output3 = tile_status_dir + '\\dp1_tile_status_lists\\' + 'Complete_list_of_dp1_tiles_not_processed.csv'
-    # Creates a csv list of all of the Landsat tile names that contain 1ha sites that have NOT met the minimum
+    # Creates a csv list of all the Landsat tile names that contain 1ha sites that have NOT met the minimum
     # fc_count threshold.
     with open(csv_output3, "w") as output:
         writer = csv.writer(output, lineterminator='\n')
@@ -234,19 +231,18 @@ def create_csv_list_of_paths_fn(lsat_tile, lsat_dir, extension, image_count, til
 
     return list_sufficient, list_landsat_tile_path
 
+
 def main_routine(export_dir_path, geo_df2, image_count, lsat_dir, path, row, zone, extension):
-
-
     # define the tile_status_dir path
     tile_status_dir = (export_dir_path + '\\dp1_tile_status')
-    #print("tile_status_dir:", tile_status_dir)
+    # print("tile_status_dir:", tile_status_dir)
 
     print("init landsat list")
 
     # Call the append_geo_df_fn function to concatenate previously separated projected 1ha sites to a single
     # geo-dataframe and re-project to geographic GDA94.
     geo_df = append_geo_df_fn(geo_df2, zone, export_dir_path)
-    #print('geo_df: ', geo_df)
+    # print('geo_df: ', geo_df)
     # Call the unique_values_fn function to create a list of unique Landsat tiles that overlay with a 1ha site
     # - name restructured from geo-dataframe.
     # list_tile_unique = unique_values_fn(geo_df)
@@ -256,14 +252,12 @@ def main_routine(export_dir_path, geo_df2, image_count, lsat_dir, path, row, zon
     # call the create_csv_list_of_paths_fn function to determine which Landsat Tiles have a sufficient amount of
     # images to process.
     list_sufficient, list_landsat_tile_path = create_csv_list_of_paths_fn(lsat_tile, lsat_dir, extension,
-                                                  image_count, tile_status_dir, path, row, zone)
+                                                                          image_count, tile_status_dir, path, row, zone)
 
-    #print(list_sufficient, geo_df)
+    # print(list_sufficient, geo_df)
 
-
-    geo_df['uid'] = geo_df.index+1
+    geo_df['uid'] = geo_df.index + 1
     print(geo_df.uid)
-
 
     return list_sufficient, geo_df, list_landsat_tile_path
 

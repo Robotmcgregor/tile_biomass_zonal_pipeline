@@ -96,7 +96,7 @@ def apply_zonal_stats_fn(image_s, no_data, band, shape, uid):
                              stats=['count', 'min', 'max', 'mean', 'median', 'std', 'percentile_25', 'percentile_50',
                                     'percentile_75', 'percentile_95', 'percentile_99', 'range'], all_touched=False)
 
-            print("dp1: ", zs)
+            print("dp0: ", zs)
             # extract image name and append to list
             img_name = str(srci)[-54:-11]
             list_image_name.append(img_name)
@@ -145,14 +145,9 @@ def time_stamp_fn(output_zonal_stats):
     @return output_zonal_stats: processed dataframe object containing the Landsat tile Fractional Cover zonal stats and
     updated features.
     """
-
-    #print(output_zonal_stats.date[:6])
-    #print(output_zonal_stats.date[6:])
     # Convert the date to a time stamp
-    time_stamp_st = pd.to_datetime(output_zonal_stats.date[:6], format='%Y%m')
-    time_stamp_end = pd.to_datetime(output_zonal_stats.date[6:], format='%Y%m')
-    output_zonal_stats.insert(4, 'date_st', time_stamp_st)
-    output_zonal_stats.insert(5, 'date_end', time_stamp_end)
+    time_stamp = pd.to_datetime(output_zonal_stats.date, format='%Y%m%d')
+    output_zonal_stats.insert(4, 'time_stamp_fn', time_stamp)
     output_zonal_stats['year'] = output_zonal_stats['date'].map(lambda x: str(x)[:4])
     output_zonal_stats['month'] = output_zonal_stats['date'].map(lambda x: str(x)[4:6])
     output_zonal_stats['day'] = output_zonal_stats['date'].map(lambda x: str(x)[6:])
@@ -174,25 +169,24 @@ def time_stamp_fn(output_zonal_stats):
 #     output_zonal_stats['b3_min'] = output_zonal_stats['b3_min'].replace(0, np.nan)
 #
 #     # band 1
-#     output_zonal_stats['b1_min'] = output_zonal_stats['b1_min']
-#     output_zonal_stats['b1_max'] = output_zonal_stats['b1_max']
-#     output_zonal_stats['b1_mean'] = output_zonal_stats['b1_mean']
-#     output_zonal_stats['b1_median'] = output_zonal_stats['b1_median']
+#     output_zonal_stats['b1_min'] = output_zonal_stats['b1_min'] - 100
+#     output_zonal_stats['b1_max'] = output_zonal_stats['b1_max'] - 100
+#     output_zonal_stats['b1_mean'] = output_zonal_stats['b1_mean'] - 100
+#     output_zonal_stats['b1_median'] = output_zonal_stats['b1_median'] - 100
 #
 #     # band 2
-#     output_zonal_stats['b2_min'] = output_zonal_stats['b2_min']
-#     output_zonal_stats['b2_max'] = output_zonal_stats['b2_max']
-#     output_zonal_stats['b2_mean'] = output_zonal_stats['b2_mean']
-#     output_zonal_stats['b2_median'] = output_zonal_stats['b2_median']
+#     output_zonal_stats['b2_min'] = output_zonal_stats['b2_min'] - 100
+#     output_zonal_stats['b2_max'] = output_zonal_stats['b2_max'] - 100
+#     output_zonal_stats['b2_mean'] = output_zonal_stats['b2_mean'] - 100
+#     output_zonal_stats['b2_median'] = output_zonal_stats['b2_median'] - 100
 #
 #     # band 3
-#     output_zonal_stats['b3_min'] = output_zonal_stats['b3_min']
-#     output_zonal_stats['b3_max'] = output_zonal_stats['b3_max']
-#     output_zonal_stats['b3_mean'] = output_zonal_stats['b3_mean']
-#     output_zonal_stats['b3_median'] = output_zonal_stats['b3_median']
+#     output_zonal_stats['b3_min'] = output_zonal_stats['b3_min'] - 100
+#     output_zonal_stats['b3_max'] = output_zonal_stats['b3_max'] - 100
+#     output_zonal_stats['b3_mean'] = output_zonal_stats['b3_mean'] - 100
+#     output_zonal_stats['b3_median'] = output_zonal_stats['b3_median'] - 100
 #
 #     return output_zonal_stats
-#
 
 
 def landsat_correction_fn(output_zonal_stats, num_bands, var_):
@@ -209,86 +203,18 @@ def landsat_correction_fn(output_zonal_stats, num_bands, var_):
         output_zonal_stats['b{0}_{1}_min'.format(str(i), var_)] = \
             output_zonal_stats['b{0}_{1}_min'.format(str(i), var_)].replace(0, np.nan)
 
-        # output_zonal_stats['b{0}_{1}_min'.format(i, var_)] = output_zonal_stats['b{0}_{1}_min'.format(i, var_)] - 100
-        # output_zonal_stats['b{0}_{1}_max'.format(i, var_)] = output_zonal_stats['b{0}_{1}_max'.format(i, var_)] - 100
-        # output_zonal_stats['b{0}_{1}_mean'.format(i, var_)] = output_zonal_stats['b{0}_{1}_mean'.format(i, var_)] - 100
-        # output_zonal_stats['b{0}_{1}_med'.format(i, var_)] = output_zonal_stats['b{0}_{1}_med'.format(i, var_)] - 100
-        # output_zonal_stats['b{0}_{1}_p25'.format(i, var_)] = output_zonal_stats['b{0}_{1}_p25'.format(i, var_)] - 100
-        # output_zonal_stats['b{0}_{1}_p50'.format(i, var_)] = output_zonal_stats['b{0}_{1}_p50'.format(i, var_)] - 100
-        # output_zonal_stats['b{0}_{1}_p75'.format(i, var_)] = output_zonal_stats['b{0}_{1}_p75'.format(i, var_)] - 100
-        # output_zonal_stats['b{0}_{1}_p95'.format(i, var_)] = output_zonal_stats['b{0}_{1}_p95'.format(i, var_)] - 100
-        # output_zonal_stats['b{0}_{1}_p99'.format(i, var_)] = output_zonal_stats['b{0}_{1}_p99'.format(i, var_)] - 100
-        ## output_zonal_stats['b{0}_{1}_range'.format(i, var_)] = output_zonal_stats['b{0}_{1}_range'.format(i, var_)] - 100
-        #
+        output_zonal_stats['b{0}_{1}_min'.format(i, var_)] = output_zonal_stats['b{0}_{1}_min'.format(i, var_)] # - 100
+        output_zonal_stats['b{0}_{1}_max'.format(i, var_)] = output_zonal_stats['b{0}_{1}_max'.format(i, var_)] # - 100
+        output_zonal_stats['b{0}_{1}_mean'.format(i, var_)] = output_zonal_stats['b{0}_{1}_mean'.format(i, var_)] # - 100
+        output_zonal_stats['b{0}_{1}_med'.format(i, var_)] = output_zonal_stats['b{0}_{1}_med'.format(i, var_)] # - 100
+        output_zonal_stats['b{0}_{1}_p25'.format(i, var_)] = output_zonal_stats['b{0}_{1}_p25'.format(i, var_)] # - 100
+        output_zonal_stats['b{0}_{1}_p50'.format(i, var_)] = output_zonal_stats['b{0}_{1}_p50'.format(i, var_)] # - 100
+        output_zonal_stats['b{0}_{1}_p75'.format(i, var_)] = output_zonal_stats['b{0}_{1}_p75'.format(i, var_)] # - 100
+        output_zonal_stats['b{0}_{1}_p95'.format(i, var_)] = output_zonal_stats['b{0}_{1}_p95'.format(i, var_)] # - 100
+        output_zonal_stats['b{0}_{1}_p99'.format(i, var_)] = output_zonal_stats['b{0}_{1}_p99'.format(i, var_)] # - 100
+        #output_zonal_stats['b{0}_{1}_range'.format(i, var_)] = output_zonal_stats['b{0}_{1}_range'.format(i, var_)] # - 100
 
     return output_zonal_stats
-
-def time_stamp_fn(output_zonal_stats):
-    """Insert a timestamp into feature position 4, convert timestamp into year, month and day strings and append to
-    dataframe.
-
-    @param output_zonal_stats: dataframe object containing the Landsat tile Fractional Cover zonal stats
-    @return output_zonal_stats: processed dataframe object containing the Landsat tile Fractional Cover zonal stats and
-    updated features.
-    """
-
-    s_year_ = []
-    s_month_ = []
-    s_day_ = []
-    s_date_ = []
-    e_year_ = []
-    e_month_ = []
-    e_day_ = []
-    e_date_ = []
-
-    import calendar
-    print("init time stamp")
-    # Convert the date to a time stamp
-    for n in output_zonal_stats.date:
-        i = str(n)
-        #print(i)
-        s_year = i[:4]
-        s_month = i[4:6]
-        s_day = "01"
-        s_date = str(s_year) + str(s_month) + str(s_day)
-
-        s_year_.append(s_year)
-        s_month_.append(s_month)
-        s_day_.append(s_day)
-        s_date_.append(s_date)
-
-        e_year = i[6:10]
-        e_month = i[10:12]
-        m, d = calendar.monthrange(int(e_year), int(e_month))
-        e_day = str(d)
-        if len(e_day) < 1:
-            d_ = "0" + str(d)
-        else:
-            d_ = str(d)
-
-        e_date = str(e_year) + str(e_month) + str(d_)
-
-        e_year_.append(e_year)
-        e_month_.append(e_month)
-        e_day_.append(e_day)
-        e_date_.append(e_date)
-
-    output_zonal_stats.insert(4, 'e_date', e_date_)
-    output_zonal_stats.insert(4, 'e_year', e_year_)
-    output_zonal_stats.insert(4, 'e_month', e_month_)
-    output_zonal_stats.insert(4, 'e_day', e_day_)
-
-    output_zonal_stats.insert(4, 's_date', s_date_)
-    output_zonal_stats.insert(4, 's_year', s_year_)
-    output_zonal_stats.insert(4, 's_month', s_month_)
-    output_zonal_stats.insert(4, 's_day', s_day_)
-
-    pd.to_datetime(output_zonal_stats.s_date, format='%Y%m%d')
-
-    pd.to_datetime(output_zonal_stats.e_date, format='%Y%m%d')
-
-    return output_zonal_stats
-
 
 
 def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stats_output, shape, var_):
@@ -310,7 +236,7 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
 
     # shapefile = os.path.join(zonal_stats_ready_dir, "{0}_by_tile.shp".format(complete_tile))
     # df = gpd.read_file("Z:\\Scratch\\Rob\\test2.shp")
-
+    #
     # shape = shapefile
     #shape = geo_df3
     # nodata = int(0)
@@ -318,13 +244,13 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
     im_list = tile
 
     # create temporary folders
-    dp1_temp_dir_bands = os.path.join(temp_dir_path, 'dp1_temp_individual_bands')
-    os.makedirs(dp1_temp_dir_bands)
+    dp0_temp_dir_bands = os.path.join(temp_dir_path, 'dp0_temp_individual_bands')
+    os.makedirs(dp0_temp_dir_bands)
 
     num_bands = [1, 2, 3]
     for i in num_bands:
 
-        band_dir = os.path.join(dp1_temp_dir_bands, 'band{0}'.format(str(i)))
+        band_dir = os.path.join(dp0_temp_dir_bands, 'band{0}'.format(str(i)))
         os.makedirs(band_dir)
 
     for band in num_bands:
@@ -336,16 +262,10 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
 
                 # cleans the file pathway (Windows)
                 image_s = image.rstrip()
-                path_, im_name = os.path.split(image_s) #[
-                #            -43:]  # May need to change these values depending on whether there is a 2 or 3 in the
-                # # name.
-
-                #print("im_name_s: ", im_name_s)
-                #im_name = im_name_s + 'g'
-                # print('Image name: ', im_name)
-
+                #print("image_s: ", image_s)
+                path_, im_name = os.path.split(image_s)
                 image_name_split = im_name.split("_")
-                im_date = image_name_split[-2][1:]
+                im_date = image_name_split[-3]
                 #print("im_date: ", im_date)
                 # im_date = image_s[
                 #           -27:-19]  # May need to change these values depending on whether there is a 2 or 3 in the
@@ -360,7 +280,6 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
 
                     # header = [str(band) + '_number', str(band) + '_site', str(band) + '_min', str(band) + '_max',
                     #           str(band) + '_mean', str(band) + '_count', str(band) + '_std', str(band) + '_median']
-                    #
 
                     header = ["b" + str(band) + '_uid', "b" + str(band) + '_site', "b" + str(band) + '_min',
                               "b" + str(band) + '_max',  "b" + str(band) + '_mean',  "b" + str(band) + '_count',
@@ -369,27 +288,25 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
                               "b" + str(band) + '_p95', "b" + str(band) + '_p99']
 
                     if band == 1:
-
                         df1 = pd.DataFrame.from_records(final_results)
-                        #print(df1)
+                        print(df1)
                         df = pd.DataFrame.from_records(final_results, columns=header)
                         df['band'] = band
                         df['image'] = im_name
                         df['date'] = im_date
-                        #print(df)
-                        df.to_csv(dp1_temp_dir_bands + '//band1//' + image_results, index=False)
+                        df.to_csv(dp0_temp_dir_bands + '//band1//' + image_results, index=False)
                     elif band == 2:
                         df = pd.DataFrame.from_records(final_results, columns=header)
                         df['band'] = band
                         df['image'] = im_name
                         df['date'] = im_date
-                        df.to_csv(dp1_temp_dir_bands + '//band2//' + image_results, index=False)
+                        df.to_csv(dp0_temp_dir_bands + '//band2//' + image_results, index=False)
                     elif band == 3:
                         df = pd.DataFrame.from_records(final_results, columns=header)
                         df['band'] = band
                         df['image'] = im_name
                         df['date'] = im_date
-                        df.to_csv(dp1_temp_dir_bands + '//band3//' + image_results, index=False)
+                        df.to_csv(dp0_temp_dir_bands + '//band3//' + image_results, index=False)
                     else:
                         print('There is an error.')
 
@@ -397,7 +314,7 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
 
     # for loops through the band folders and concatenates zonal stat outputs into a complete band specific csv
     for x in num_bands:
-        location_output = dp1_temp_dir_bands + '//band' + str(x)
+        location_output = dp0_temp_dir_bands + '//band' + str(x)
         band_files = glob.glob(os.path.join(location_output,
                                             '*.csv'))
 
@@ -405,32 +322,36 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
         df_from_each_band_file = (pd.read_csv(f) for f in band_files)
         concat_band_df = pd.concat(df_from_each_band_file, ignore_index=False, axis=0, sort=False)
         # export the band specific results to a csv file (i.e. three outputs)
-        concat_band_df.to_csv(dp1_temp_dir_bands + '//' + 'Band' + str(x) + '_test.csv', index=False)
+        concat_band_df.to_csv(dp0_temp_dir_bands + '//' + 'Band' + str(x) + '_test.csv', index=False)
 
     # ----------------------------------------- Concatenate three bands together ---------------------------------------
 
     # Concatenate Three bands
-    header_all = ['uid', 'site', 'b1_dp1_min', 'b1_dp1_max', 'b1_dp1_mean', 'b1_dp1_count',
-                  'b1_dp1_std', 'b1_dp1_med', 'b1_dp1_range', 'b1_dp1_p25', 'b1_dp1_p50', 'b1_dp1_p75',
-                              'b1_dp1_p95', 'b1_dp1_p99',  'band', 'image', 'date',
-                  'b2_dp1_ident', 'b2_dp1_site', 'b2_dp1_min', 'b2_dp1_max', 'b2_dp1_mean', 'b2_dp1_count', 'b2_dp1_std',
-                  'b2_dp1_med',  'b2_dp1_range', 'b2_dp1_p25', 'b2_dp1_p50', 'b2_dp1_p75',
-                              'b2_dp1_p95', 'b2_dp1_p99',
+    # header_all = ['ident', 'site', 'b1_min', 'b1_max', 'b1_mean', 'b1_count',
+    #               'b1_std', 'b1_median', 'band', 'image', 'date', 'b2_ident',
+    #               'b2_site', 'b2_min', 'b2_max', 'b2_mean', 'b2_count', 'b2_std', 'b2_median',
+    #               'band2', 'image2', 'date2', 'b3_ident', 'b3_site', 'b3_min', 'b3_max', 'b3_mean',
+    #               'b3_count', 'b3_std', 'b3_median', 'band3', 'image3', 'date3']
 
-                  'band2', 'image2', 'date2', 'b3_ident', 'b3_site', 'b3_dp1_min', 'b3_dp1_max', 'b3_dp1_mean',
-                  'b3_dp1_count', 'b3_dp1_std', 'b3_dp1_med', 'b3_dp1_range', 'b3_dp1_p25', 'b3_dp1_p50', 'b3_dp1_p75',
-                              'b3_dp1_p95', 'b3_dp1_p99',  'band3', 'image3', 'date3']
-    # print("dp1_temp_dir_bands: ", dp1_temp_dir_bands)
+    header_all = ['uid', 'site', 'b1_dp0_min', 'b1_dp0_max', 'b1_dp0_mean', 'b1_dp0_count',
+                  'b1_dp0_std', 'b1_dp0_med', 'b1_dp0_range', 'b1_dp0_p25', 'b1_dp0_p50', 'b1_dp0_p75',
+                              'b1_dp0_p95', 'b1_dp0_p99',  'band', 'image', 'date',
+                  'b2_dp0_ident', 'b2_dp0_site', 'b2_dp0_min', 'b2_dp0_max', 'b2_dp0_mean', 'b2_dp0_count', 'b2_dp0_std',
+                  'b2_dp0_med',  'b2_dp0_range', 'b2_dp0_p25', 'b2_dp0_p50', 'b2_dp0_p75',
+                              'b2_dp0_p95', 'b2_dp0_p99',
 
-    all_files = glob.glob(os.path.join(dp1_temp_dir_bands,
+                  'band2', 'image2', 'date2', 'b3_ident', 'b3_site', 'b3_dp0_min', 'b3_dp0_max', 'b3_dp0_mean',
+                  'b3_dp0_count', 'b3_dp0_std', 'b3_dp0_med', 'b3_dp0_range', 'b3_dp0_p25', 'b3_dp0_p50', 'b3_dp0_p75',
+                              'b3_dp0_p95', 'b3_dp0_p99',  'band3', 'image3', 'date3']
+
+
+    # print("dp0_temp_dir_bands: ", dp0_temp_dir_bands)
+
+    all_files = glob.glob(os.path.join(dp0_temp_dir_bands,
                                        '*.csv'))
     # advisable to use os.path.join as this makes concatenation OS independent
     df_from_each_file = (pd.read_csv(f) for f in all_files)
     output_zonal_stats = pd.concat(df_from_each_file, ignore_index=False, axis=1, sort=False)
-
-    # print(output_zonal_stats)
-    # for i in output_zonal_stats.columns:
-    #     print(i)
     output_zonal_stats.columns = header_all
 
     # -------------------------------------------------- Clean dataframe -----------------------------------------------
@@ -442,42 +363,47 @@ def main_routine(temp_dir_path, zonal_stats_ready_dir, no_data, tile, zonal_stat
     output_zonal_stats = landsat_correction_fn(output_zonal_stats, num_bands, var_)
 
     # reshape the final dataframe
+    # output_zonal_stats = output_zonal_stats[
+    #     ['ident', 'site', 'image', 'year', 'month', 'day', 'b1_min',
+    #      'b1_max', 'b1_mean', 'b1_count', 'b1_std', 'b1_median', 'b2_min', 'b2_max', 'b2_mean', 'b2_count',
+    #      'b2_std', 'b2_median', 'b3_min', 'b3_max', 'b3_mean', 'b3_count', 'b3_median', 'b3_std']]
+
+    # reshape the final dataframe
     output_zonal_stats = output_zonal_stats[
-        ['uid', 'site', 'image', 's_day', 's_month', 's_year', 's_date', 'e_day', 'e_month', 'e_year', 'e_date', 'b1_dp1_min',
-         'b1_dp1_max', 'b1_dp1_mean', 'b1_dp1_count', 'b1_dp1_std', 'b1_dp1_med', 'b1_dp1_p25', 'b1_dp1_p50', 'b1_dp1_p75',
-                                  'b1_dp1_p95', 'b1_dp1_p99', 'b1_dp1_range', 'b2_dp1_min', 'b2_dp1_max',
-         'b2_dp1_mean', 'b2_dp1_count',
-         'b2_dp1_std', 'b2_dp1_med', 'b2_dp1_p25', 'b2_dp1_p50', 'b2_dp1_p75',
-                              'b2_dp1_p95', 'b2_dp1_p99', 'b2_dp1_range', 'b3_dp1_min', 'b3_dp1_max', 'b3_dp1_mean',
-         'b3_dp1_count', 'b3_dp1_med', 'b3_dp1_p25', 'b3_dp1_p50', 'b3_dp1_p75',
-                              'b3_dp1_p95', 'b3_dp1_p99', 'b3_dp1_range',
-         'b3_dp1_std']]
+        ['uid', 'site', 'image', 'year', 'month', 'day', 'b1_dp0_min',
+         'b1_dp0_max', 'b1_dp0_mean', 'b1_dp0_count', 'b1_dp0_std', 'b1_dp0_med', 'b1_dp0_p25', 'b1_dp0_p50', 'b1_dp0_p75',
+                                  'b1_dp0_p95', 'b1_dp0_p99', 'b1_dp0_range', 'b2_dp0_min', 'b2_dp0_max',
+         'b2_dp0_mean', 'b2_dp0_count',
+         'b2_dp0_std', 'b2_dp0_med', 'b2_dp0_p25', 'b2_dp0_p50', 'b2_dp0_p75',
+                              'b2_dp0_p95', 'b2_dp0_p99', 'b2_dp0_range', 'b3_dp0_min', 'b3_dp0_max', 'b3_dp0_mean',
+         'b3_dp0_count', 'b3_dp0_med', 'b3_dp0_p25', 'b3_dp0_p50', 'b3_dp0_p75',
+                              'b3_dp0_p95', 'b3_dp0_p99', 'b3_dp0_range',
+         'b3_dp0_std']]
 
     site_list = output_zonal_stats.site.unique().tolist()
-    #print("length of site list: ", len(site_list))
+    print("length of site list: ", len(site_list))
     if len(site_list) >= 1:
         for i in site_list:
             out_df = output_zonal_stats[output_zonal_stats['site'] == i]
 
-            out_path = os.path.join(zonal_stats_output, "{0}_{1}_dp1_zonal_stats.csv".format(str(i), complete_tile))
+            out_path = os.path.join(zonal_stats_output, "{0}_{1}_dp0_zonal_stats.csv".format(str(i), complete_tile))
             # export the pandas df to a csv file
             out_df.to_csv(out_path, index=False)
 
 
     else:
-        out_path = os.path.join(zonal_stats_output, "{0}_{1}_dp1_zonal_stats.csv".format(str(site_list[0]), complete_tile))
+        out_path = os.path.join(zonal_stats_output, "{0}_{1}_dp0_zonal_stats.csv".format(str(site_list[0]), complete_tile))
         # export the pandas df to a csv file
         output_zonal_stats.to_csv(out_path, index=False)
 
 
     # ----------------------------------------------- Delete temporary files -------------------------------------------
     # remove the temp dir and single band csv files
-    shutil.rmtree(dp1_temp_dir_bands)
+    shutil.rmtree(dp0_temp_dir_bands)
 
-    print("Completed DP1 - exported to: ", zonal_stats_output)
     print('=' * 50)
 
-    return output_zonal_stats, complete_tile, tile, dp1_temp_dir_bands
+    return output_zonal_stats, complete_tile, tile, dp0_temp_dir_bands
 
 
 if __name__ == '__main__':

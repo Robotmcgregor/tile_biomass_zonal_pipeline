@@ -84,7 +84,7 @@ def apply_zonal_stats_fn(image_s, no_data, band, shape, uid):
     list_image_name = []
     image_date = []
     list_band = []
-
+    print(image_s)
     with rasterio.open(image_s, nodata=no_data) as srci:
         affine = srci.transform
         array = srci.read(band)

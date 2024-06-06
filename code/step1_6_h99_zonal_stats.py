@@ -60,23 +60,23 @@ SOFTWARE.
 '''
 
 
-def project_shapefile_gcs_wgs84_fn(gcs_wgs84_dir, geo_df):
+def project_shapefile_gcs_wgs84_fn(albers, geo_df):
     """ Re-project a shapefile to 'GCSWGS84' to match the projection of the max_temp data.
- @param gcs_wgs84_dir: string object containing the path to the subdirectory located in the temporary_dir\gcs_wgs84
+    @param gcs_wgs84_dir: string object containing the path to the subdirectory located in the temporary_dir\gcs_wgs84
     @return:
     """
 
     # read in shp as a geoDataFrame.
     #df = gpd.read_file(zonal_stats_ready_dir + '\\' + complete_tile + '_by_tile.shp')
 
-    # project to GCSWGS84
+    # project to Australian Albers
     cgs_df = geo_df.to_crs(epsg=3577)
 
     # define crs file/path name variable.
-    crs_name = 'GDA94AUSALB'
+    crs_name = 'albers'
 
     # Export re-projected shapefiles.
-    projected_shape_path = gcs_wgs84_dir + '\\' + 'geo_df_' + str(crs_name) + '.shp'
+    projected_shape_path = albers + '\\' + 'geo_df_' + str(crs_name) + '.shp'
 
     # Export re-projected shapefiles.
     cgs_df.to_file(projected_shape_path)
@@ -85,6 +85,7 @@ def project_shapefile_gcs_wgs84_fn(gcs_wgs84_dir, geo_df):
 
 
 def apply_zonal_stats_fn(image_s, projected_shape_path, uid, variable, no_data):
+
     """
     Derive zonal stats for a list of Landsat imagery.
 
@@ -98,12 +99,12 @@ def apply_zonal_stats_fn(image_s, projected_shape_path, uid, variable, no_data):
     zone_stats_list = []
     site_id_list = []
     image_name_list = []
-    # print("Working on variabele: ", variable)
+    # print("Working on variable: ", variable)
     # print(qld_dict)
     # variable_values = qld_dict.get(variable)
 
     # print("variable_values: ", variable_values)
-    # no_data = variable_values[3]  # the no_data value for the silo max_temp raster imagery
+    no_data = no_data  # the no_data value for the silo max_temp raster imagery
 
     print("*"*50)
     print("*" * 50)
@@ -119,11 +120,11 @@ def apply_zonal_stats_fn(image_s, projected_shape_path, uid, variable, no_data):
 
         #print("array: ", array)
         #print("Array shape: ", array.shape)
-        #array = array + variable_values[4]
-        array = array - 100
+        # array = array + variable_values[4]
+
         #print("updated array: ", array)
         #print("Updated array shape: ", array.shape)
-        #array = array * variable_values[2]
+        array = array - 100
         #print("Scaled updated array: ", array)
         #print("Scaled Updated array shape: ", array.shape)
 
@@ -235,21 +236,27 @@ def clean_data_frame_fn(output_list, output_dir, var_):
     return output_max_temp
 
 
-def main_routine(export_dir_path, variable, csv_file, temp_dir_path, projected_shape_path, no_data):
+def main_routine(export_dir_path, variable, csv_file, temp_dir_path, geo_df, no_data):
     """ Calculate the zonal statistics for each 1ha site per QLD monthly max_temp image (single band).
     Concatenate and clean final output DataFrame and export to the Export directory/zonal stats.
 
-    xport_dir_path, zonal_stats_ready_dir, fpc_output_zonal_stats, fpc_complete_tile, i, csv_file, temp_dir_path, qld_dict"""
+    export_dir_path, zonal_stats_ready_dir, fpc_output_zonal_stats, fpc_complete_tile, i, csv_file, temp_dir_path, qld_dict"""
 
-    # tree_height_dir = r"Z:\Landsat\mosaics\persistent_green"
+    # tree_height_dir = r"Z:\Landsat\mosaics\structural_formation\h99_mos"
     # image_list = []
-    # for image in glob(os.path.join(tree_height_dir, "*djaa*.img")):
+    # for image in glob(os.path.join(tree_height_dir, "*h99a*.img")):
     #     print("tree height: ", image)
     #     image.list.extend(image)
+
+    print("Seasonal Tree height beginning.........")
+    print("no_data: ", no_data, " - should be 0")
 
     uid = 'uid'
     output_list = []
     print("variable: ", variable)
+
+    albers_dir = os.path.join(temp_dir_path, "albers")
+    print("albers Dir: ", albers_dir )
 
     # # define the GCSWGS84 directory pathway
     # gcs_wgs84_dir = (temp_dir_path + '\\gcs_wgs84')
@@ -258,14 +265,14 @@ def main_routine(export_dir_path, variable, csv_file, temp_dir_path, projected_s
     output_dir = (os.path.join(export_dir_path, "{0}_zonal_stats".format(variable)))
 
     # call the project_shapefile_gcs_wgs84_fn function
-    #cgs_df, projected_shape_path = project_shapefile_gcs_wgs84_fn(output_dir, geo_df)
+    cgs_df, projected_shape_path = project_shapefile_gcs_wgs84_fn(albers_dir, geo_df)
 
     # open the list of imagery and read it into memory and call the apply_zonal_stats_fn function
     with open(csv_file, 'r') as imagery_list:
 
         # loop through the list of imagery and input the image into the raster zonal_stats function
         for image in imagery_list:
-            # print('image: ', image)
+            print('image: ', image)
 
             image_s = image.rstrip()
             print("image_s: ", image_s)
@@ -277,6 +284,8 @@ def main_routine(export_dir_path, variable, csv_file, temp_dir_path, projected_s
 
     # call the clean_data_frame_fn function
     clean_output_temp = clean_data_frame_fn(output_list, output_dir, variable)
+
+    return projected_shape_path
 
 
 if __name__ == "__main__":
